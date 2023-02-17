@@ -1,0 +1,4 @@
+validation_dataset_proportion: 0.3
+test_dataset_proportion: 0.1
+batch_size: 10
+seed: 42
