@@ -5,7 +5,7 @@ import torch
 from typing import Tuple
 
 
-class ImageLoader(Dataset):
+class ImageDataset(Dataset):
     def __init__(self, images, labels) -> None:
         super().__init__()
         if len(images) != len(labels):
@@ -22,12 +22,12 @@ class ImageLoader(Dataset):
         return len(self.labels)
 
 
-def get_dataset() -> ImageLoader:
+def get_dataset() -> ImageDataset:
     with h5py.File("data/Galaxy10_DECals.h5", "r") as F:
         images = np.array(F["images"])
         labels = np.array(F["ans"])
 
-    return ImageLoader(images, labels)
+    return ImageDataset(images, labels)
 
 
 def get_dataloaders(config, shuffle=True) -> Tuple[DataLoader, DataLoader, DataLoader]:
