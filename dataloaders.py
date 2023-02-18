@@ -1,8 +1,10 @@
+from typing import Tuple
+
 import h5py
 import numpy as np
-from torch.utils.data import Dataset, DataLoader, random_split
 import torch
-from typing import Tuple
+import torchvision.transforms as transforms
+from torch.utils.data import DataLoader, Dataset, random_split
 
 
 class ImageDataset(Dataset):
@@ -14,9 +16,18 @@ class ImageDataset(Dataset):
             )
         self.images = images
         self.labels = labels
+        self.tensor_converter = transforms.ToTensor()
+        self.resizer = transforms.Resize(224)
 
     def __getitem__(self, index):
-        return self.images[index], self.labels[index]
+        image = self.images[index]
+        image = self.tensor_converter(image)
+        image = self.resizer(image)
+
+        label = self.labels[index]
+        label = int(label)  # label is originally numpy int
+
+        return image, label
 
     def __len__(self):
         return len(self.labels)
@@ -30,9 +41,9 @@ def get_dataset() -> ImageDataset:
     return ImageDataset(images, labels)
 
 
-def get_dataloaders(config, shuffle=True) -> Tuple[DataLoader, DataLoader, DataLoader]:
-    dataset = get_dataset()
-
+def get_dataloaders(
+    config, dataset, shuffle=True
+) -> Tuple[DataLoader, DataLoader, DataLoader]:
     val_prop = config["validation_dataset_proportion"]
     test_prop = config["test_dataset_proportion"]
     train_dataset, validation_dataset, test_dataset = random_split(
@@ -75,5 +86,6 @@ if __name__ == "__main__":
 
     config = configue.load("config.yaml")
 
-    train, valid, test = get_dataloaders(config)
+    dataset = get_dataset()
+    train, valid, test = get_dataloaders(config, dataset)
     print(train)

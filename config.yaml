@@ -1,4 +1,26 @@
+seed: 42
+
+# dataset parameters
 validation_dataset_proportion: 0.3
 test_dataset_proportion: 0.1
+
+# model parameters
+model: resnet50
+model_architecture : 
+  fully_connected_hidden_layers : [2048, "relu", 1024, "relu", 512, "relu", 256, "relu", 128]
+  nb_output_classes : 10
+load_checkpoint: false
+checkpoint_path : ""
+
+# training parameters
 batch_size: 10
-seed: 42
+learning_rate : 
+    initial_value: 0.01
+    decrease_on_plateau: true
+    patience: 3
+weight_decay: 0.0001
+nb_epochs : 50
+
+# useful paths and stuff
+paths : 
+  experiments_folder : experiments
