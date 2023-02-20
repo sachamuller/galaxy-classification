@@ -48,10 +48,11 @@ class Monitor:
 
     def plot_data(self):
         for i, data in enumerate(self.all_data):
-            plt.figure()
+            fig = plt.figure()
             plt.plot([j for j in range(len(data))], data)
             plt.xlabel("Epochs")
             plt.savefig(os.path.join(self.folder_name, f"{self.data_names[i]}.png"))
+            plt.close(fig)
 
     def log_data(self, file_name="log.txt"):
         text = ""

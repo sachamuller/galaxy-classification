@@ -35,7 +35,7 @@ def fine_tune_parsing_model(
     model.to(device)
     if config["load_checkpoint"]:
         model = load_model_from_checkpoint(model, config["checkpoint_path"])
-    dataset: ImageDataset = get_dataset()
+    dataset: ImageDataset = get_dataset(config)
 
     train_loader, validation_loader, _ = get_dataloaders(config, dataset)
 
@@ -141,7 +141,7 @@ def get_experiment_folder_name(config: dict) -> str:
         results_folder, datetime.now().strftime("%y-%m-%d_%H:%M:%S")
     )
     os.makedirs(new_folder_path)
-    with open(os.path.join(new_folder_path, "config.yaml"), 'w+') as f:
+    with open(os.path.join(new_folder_path, "config.yaml"), "w+") as f:
         yaml.dump(config, f)
     return new_folder_path
 

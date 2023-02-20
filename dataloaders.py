@@ -3,6 +3,7 @@ from typing import Tuple
 import h5py
 import numpy as np
 import torch
+import random
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, Dataset, random_split
 
@@ -33,10 +34,19 @@ class ImageDataset(Dataset):
         return len(self.labels)
 
 
-def get_dataset() -> ImageDataset:
+def get_dataset(config) -> ImageDataset:
     with h5py.File("data/Galaxy10_DECals.h5", "r") as F:
         images = np.array(F["images"])
         labels = np.array(F["ans"])
+
+    if config["dataset_percentage"] < 1.0:
+        random.seed(config["seed"])
+        selected_index = random.sample(
+            [i for i in range(len(images))],
+            int(config["dataset_percentage"] * len(images)),
+        )
+        images = images[selected_index]
+        labels = labels[selected_index]
 
     return ImageDataset(images, labels)
 
@@ -86,6 +96,6 @@ if __name__ == "__main__":
 
     config = configue.load("config.yaml")
 
-    dataset = get_dataset()
+    dataset = get_dataset(config)
     train, valid, test = get_dataloaders(config, dataset)
     print(train)

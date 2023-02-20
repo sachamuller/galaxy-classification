@@ -3,6 +3,7 @@ seed: 42
 # dataset parameters
 validation_dataset_proportion: 0.3
 test_dataset_proportion: 0.1
+dataset_percentage : 0.1
 
 # model parameters
 model: resnet50
