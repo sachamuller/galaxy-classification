@@ -132,3 +132,4 @@ dmypy.json
 # Folders
 data
 experiments
+intermediate

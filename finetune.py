@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader
 from torchmetrics.classification import MulticlassAccuracy
 
 from dataloaders import ImageDataset, get_dataloaders, get_dataset
+from intermediate_forward import ActivationMapsDataset, get_intermediate_dataset
 from models import GalaxyResNet, get_pretrained_model
 from monitoring import AverageMeter, Monitor
 
@@ -35,7 +36,13 @@ def fine_tune_parsing_model(
     model.to(device)
     if config["load_checkpoint"]:
         model = load_model_from_checkpoint(model, config["checkpoint_path"])
-    dataset: ImageDataset = get_dataset(config)
+
+    intermediate_forward = config["intermediate_forward"]
+    if not intermediate_forward:
+        dataset: ImageDataset = get_dataset(config)
+    else:
+        dataset: ActivationMapsDataset = get_intermediate_dataset(config, model, device)
+        model.freeze_beginning()
 
     train_loader, validation_loader, _ = get_dataloaders(config, dataset)
 
@@ -84,6 +91,7 @@ def fine_tune_parsing_model(
             metrics,
             device,
             epoch,
+            intermediate_forward,
         )
         val_loss, val_top1 = validate(
             model,
@@ -92,6 +100,7 @@ def fine_tune_parsing_model(
             metrics,
             device,
             epoch,
+            intermediate_forward,
         )
         if config["learning_rate"]["decrease_on_plateau"]:
             scheduler.step(val_loss.avg)
@@ -154,6 +163,7 @@ def train_one_epoch(
     metrics: Dict[str, MulticlassAccuracy],
     device: torch.device,
     epoch: int,
+    intermediate_forward: bool,
     print_freq: int = 10,
 ) -> Tuple[AverageMeter, AverageMeter]:
     """Trains the model on the training dataset once (one epoch) and returns the metrics
@@ -179,12 +189,20 @@ def train_one_epoch(
     model.train()  # switch to train mode
 
     for batch_idx, batch in enumerate(train_loader):
-        images, labels = batch
-        labels = labels.to(device)
-        batch_size = len(images)
+        if not intermediate_forward:
+            images, labels = batch
+            labels = labels.to(device)
+            batch_size = len(images)
 
-        # compute output
-        predictions = model(images)
+            # compute output
+            predictions = model(images)
+        else:
+            activation_maps, labels = batch
+            labels = labels.to(device)
+            batch_size = len(images)
+
+            # compute output
+            predictions = model.end_forward(activation_maps)
 
         loss = criterion(predictions, labels)
 

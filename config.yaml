@@ -4,6 +4,8 @@ seed: 42
 validation_dataset_proportion: 0.3
 test_dataset_proportion: 0.1
 dataset_percentage : 0.1
+intermediate_forward : true
+intermediate_activation_map_size : [2048, 7, 7]
 
 # model parameters
 model: resnet50
@@ -14,7 +16,7 @@ load_checkpoint: false
 checkpoint_path : ""
 
 # training parameters
-batch_size: 10
+batch_size: 1
 learning_rate : 
     initial_value: 0.01
     decrease_on_plateau: true
@@ -25,3 +27,5 @@ nb_epochs : 50
 # useful paths and stuff
 paths : 
   experiments_folder : experiments
+  intermediate_dataset_folder : intermediate
+  intermediate_dataset_name : galaxy_activation_maps.h5

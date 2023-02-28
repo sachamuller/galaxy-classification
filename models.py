@@ -35,6 +35,11 @@ class GalaxyResNet(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.intermediate_forward(x)
+        x = self.end_forward(x)
+        return x
+
+    def intermediate_forward(self, x: torch.Tensor) -> torch.Tensor:
         # beginning is copy pasted from pytorch's implementation of ResNet
         x = self.conv1(x)
         x = self.bn1(x)
@@ -45,13 +50,27 @@ class GalaxyResNet(nn.Module):
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
+        return x
 
+    def end_forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
         # we only replace resnet's fully connected with ours
         x = self.fully_connected(x)
-
         return x
+
+    def freeze_beginning(self, unfreeze=False):
+        for module in [
+            self.conv1,
+            self.bn1,
+            self.relu,
+            self.maxpool,
+            self.layer1,
+            self.layer2,
+            self.layer3,
+            self.layer4,
+        ]:
+            module.requires_grad_(unfreeze)
 
 
 def build_fully_connected(fully_connected_hidden_layers, input_dim, output_dim):

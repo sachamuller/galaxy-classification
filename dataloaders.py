@@ -33,13 +33,17 @@ class ImageDataset(Dataset):
     def __len__(self):
         return len(self.labels)
 
+    def truncate_beginning(self, start_index):
+        self.images = self.images[start_index:]
+        self.labels = self.labels[start_index:]
 
-def get_dataset(config) -> ImageDataset:
+
+def get_dataset(config, allow_sample=True) -> ImageDataset:
     with h5py.File("data/Galaxy10_DECals.h5", "r") as F:
         images = np.array(F["images"])
         labels = np.array(F["ans"])
 
-    if config["dataset_percentage"] < 1.0:
+    if allow_sample and config["dataset_percentage"] < 1.0:
         random.seed(config["seed"])
         selected_index = random.sample(
             [i for i in range(len(images))],
