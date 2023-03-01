@@ -16,61 +16,53 @@ class GalaxyResNet(nn.Module):
     def __init__(self, config, pretrained_resnet) -> None:
         super().__init__()
 
-        self.conv1 = pretrained_resnet.conv1
-        self.bn1 = pretrained_resnet.bn1
-        self.relu = pretrained_resnet.relu
-        self.maxpool = pretrained_resnet.maxpool
-
-        self.layer1 = pretrained_resnet.layer1
-        self.layer2 = pretrained_resnet.layer2
-        self.layer3 = pretrained_resnet.layer3
-        self.layer4 = pretrained_resnet.layer4
-
-        self.avgpool = pretrained_resnet.avgpool
+        self.frozen_layers = None
+        self.unfrozen_layers = None
+        self.split_forward_in_two(config, pretrained_resnet)
 
         self.fully_connected = build_fully_connected(
             config["model_architecture"]["fully_connected_hidden_layers"],
             pretrained_resnet.fc.in_features,
             config["model_architecture"]["nb_output_classes"],
         )
+        self.freeze_beginning()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.intermediate_forward(x)
         x = self.end_forward(x)
         return x
 
-    def intermediate_forward(self, x: torch.Tensor) -> torch.Tensor:
-        # beginning is copy pasted from pytorch's implementation of ResNet
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu(x)
-        x = self.maxpool(x)
+    def split_forward_in_two(self, config, pretrained_resnet):
+        frozen_half_list = []
+        unfrozen_half_list = []
+        freezing = True if config["last_frozen_layer"] != "" else False
+        # looping on layers except the last one (fully connected)
+        for layer_name in list(pretrained_resnet._modules.keys())[:-1]:
+            if freezing:
+                frozen_half_list.append(pretrained_resnet._modules[layer_name])
+            else:
+                unfrozen_half_list.append(pretrained_resnet._modules[layer_name])
+            if layer_name == config["last_frozen_layer"]:
+                freezing = False
+        self.frozen_layers = nn.Sequential(*frozen_half_list)
+        self.unfrozen_layers = nn.Sequential(*unfrozen_half_list)
 
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.layer4(x)
+    def intermediate_forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.frozen_layers(x)
         return x
 
     def end_forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.avgpool(x)
+        x = self.unfrozen_layers(x)
         x = torch.flatten(x, 1)
         # we only replace resnet's fully connected with ours
         x = self.fully_connected(x)
         return x
 
-    def freeze_beginning(self, unfreeze=False):
-        for module in [
-            self.conv1,
-            self.bn1,
-            self.relu,
-            self.maxpool,
-            self.layer1,
-            self.layer2,
-            self.layer3,
-            self.layer4,
-        ]:
-            module.requires_grad_(unfreeze)
+    def freeze_beginning(self):
+        self.frozen_layers.requires_grad_(False)
+
+    def unfreeze_beginning(self):
+        self.frozen_layers.requires_grad_(True)
 
 
 def build_fully_connected(fully_connected_hidden_layers, input_dim, output_dim):

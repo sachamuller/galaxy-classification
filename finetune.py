@@ -42,6 +42,8 @@ def fine_tune_parsing_model(
         dataset: ImageDataset = get_dataset(config)
     else:
         dataset: ActivationMapsDataset = get_intermediate_dataset(config, model, device)
+
+    if config["freeze_beginning"]:
         model.freeze_beginning()
 
     train_loader, validation_loader, _ = get_dataloaders(config, dataset)
