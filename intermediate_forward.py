@@ -26,14 +26,14 @@ def get_intermediate_dataset(
     if os.path.exists(activation_maps_path):
         F = h5py.File(activation_maps_path, "r")
         all_activation_maps = torch.from_numpy(np.array(F["activation_maps"]))
-        labels = np.array(F["ans"])
+        all_labels = np.array(F["ans"])
         F.close()
         # to find where is the last computed embedding (in case program was stopped in the middle),
         # we suppose that if the sum of the composants of the embedding equals 0, it wasn't computed
         sum_by_activation_map = list(all_activation_maps.sum(axis=(1, 2, 3)))
         if 0.0 not in sum_by_activation_map:
             # means the embeddings matrix is already completely computed
-            return ActivationMapsDataset(all_activation_maps, labels)
+            return ActivationMapsDataset(all_activation_maps, all_labels)
 
         # If we need to continue from the middle :
         image_dataset = get_dataset(config, allow_sample=False)
@@ -76,18 +76,22 @@ def get_intermediate_dataset(
 
         if batch_idx % save_freq == 0:
             save_intermediate_dataset_as_h5(
-                activation_maps_path, all_activation_maps, labels
+                activation_maps_path, all_activation_maps, all_labels
             )
 
-    save_intermediate_dataset_as_h5(activation_maps_path, all_activation_maps, labels)
+    save_intermediate_dataset_as_h5(
+        activation_maps_path, all_activation_maps, all_labels
+    )
 
-    return ActivationMapsDataset(all_activation_maps, labels)
+    return ActivationMapsDataset(all_activation_maps, all_labels)
 
 
-def save_intermediate_dataset_as_h5(activation_maps_path, all_activation_maps, labels):
+def save_intermediate_dataset_as_h5(
+    activation_maps_path, all_activation_maps, all_labels
+):
     F = h5py.File(activation_maps_path, "w")
     F.create_dataset("activation_maps", data=all_activation_maps.detach().numpy())
-    F.create_dataset("ans", data=labels)
+    F.create_dataset("ans", data=all_labels)
     F.close()
 
 
@@ -97,7 +101,7 @@ class ActivationMapsDataset(Dataset):
         activation_maps: np.array,
         labels,
     ):
-        self.activation_maps = torch.from_numpy(activation_maps)
+        self.activation_maps = activation_maps
         self.labels = labels
 
     def __getitem__(self, index):

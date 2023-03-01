@@ -199,7 +199,7 @@ def train_one_epoch(
         else:
             activation_maps, labels = batch
             labels = labels.to(device)
-            batch_size = len(images)
+            batch_size = len(activation_maps)
 
             # compute output
             predictions = model.end_forward(activation_maps)
@@ -245,6 +245,7 @@ def validate(
     metrics: Dict[str, MulticlassAccuracy],
     device: torch.device,
     epoch: int,
+    intermediate_forward: bool,
     print_freq: int = 10,
 ) -> Tuple[AverageMeter, AverageMeter]:
     """Computes the metrics on the validation dataset.
@@ -268,12 +269,20 @@ def validate(
     model.eval()  # switch to eval mode
 
     for batch_idx, batch in enumerate(validation_loader):
-        images, labels = batch
-        labels = labels.to(device)
-        batch_size = len(images)
+        if not intermediate_forward:
+            images, labels = batch
+            labels = labels.to(device)
+            batch_size = len(images)
 
-        # compute output
-        predictions = model(images)
+            # compute output
+            predictions = model(images)
+        else:
+            activation_maps, labels = batch
+            labels = labels.to(device)
+            batch_size = len(activation_maps)
+
+            # compute output
+            predictions = model.end_forward(activation_maps)
         loss = criterion(predictions, labels)
 
         # compute accuracy
