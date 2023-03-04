@@ -7,6 +7,7 @@ dataset_percentage : 0.1
 intermediate_forward : false
 freeze_beginning : false # should be true if intermediate forward is true
 last_frozen_layer : ""
+delte_pretrained_model_ending : false # cuts after last frozen layer
 intermediate_activation_map_size : [2048, 7, 7] 
 
 # model parameters

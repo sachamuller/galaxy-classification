@@ -47,6 +47,8 @@ class GalaxyResNet(nn.Module):
                 unfrozen_half_list.append(pretrained_resnet._modules[layer_name])
             if layer_name == config["last_frozen_layer"]:
                 freezing = False
+                if config["delte_pretrained_model_ending"]:
+                    break
         self.frozen_layers = nn.Sequential(*frozen_half_list)
         self.unfrozen_layers = nn.Sequential(*unfrozen_half_list)
 
