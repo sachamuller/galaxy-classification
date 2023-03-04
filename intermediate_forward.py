@@ -20,7 +20,7 @@ def get_intermediate_dataset(
 ):
     activation_maps_path = os.path.join(
         config["paths"]["intermediate_dataset_folder"],
-        f'{config["paths"]["intermediate_dataset_name"]}_{config["last_frozen_layer"]}.h5',
+        f'{config["paths"]["intermediate_dataset_name"]}_{config["model"]}_{config["last_frozen_layer"]}.h5',
     )
 
     if os.path.exists(activation_maps_path):
