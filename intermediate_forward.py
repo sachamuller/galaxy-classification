@@ -4,19 +4,18 @@ import numpy as np
 
 import torch
 import torch.nn as nn
-import torchvision.transforms as transforms
-import pandas as pd
 from tqdm import tqdm
 from torch.utils.data import DataLoader, Dataset
 
-from dataloaders import get_dataset, ImageDataset
+from dataloaders import get_dataset
 
 
 def get_intermediate_dataset(
     config: dict,
     model: nn.Module,
     device: torch.device,
-    save_freq: int = 500,
+    image_dataset,
+    save_freq: int = 300,
 ):
     activation_maps_path = os.path.join(
         config["paths"]["intermediate_dataset_folder"],
@@ -36,15 +35,16 @@ def get_intermediate_dataset(
             return ActivationMapsDataset(all_activation_maps, all_labels)
 
         # If we need to continue from the middle :
-        image_dataset = get_dataset(config, allow_sample=False)
+        # image_dataset = get_dataset(config, allow_sample=False)
         start_index = sum_by_activation_map.index(0.0)
+        all_labels = image_dataset.labels
         image_dataset.truncate_beginning(start_index)
 
     else:
-        image_dataset = get_dataset(config, allow_sample=False)
+        # image_dataset = get_dataset(config, allow_sample=False)
         os.makedirs(config["paths"]["intermediate_dataset_folder"], exist_ok=True)
         all_activation_maps = torch.zeros(
-            len(image_dataset), *config["intermediate_activation_map_size"]
+            len(image_dataset) // 4, *config["intermediate_activation_map_size"]
         )
         start_index = 0
 
@@ -74,10 +74,11 @@ def get_intermediate_dataset(
             + current_batch_size
         ] = activation_maps
 
-        if batch_idx % save_freq == 0:
+        if (batch_idx + 1) % save_freq == 0:
             save_intermediate_dataset_as_h5(
-                activation_maps_path, all_activation_maps, all_labels
+                activation_maps_path, all_activation_maps, image_dataset.labels
             )
+            return None
 
     save_intermediate_dataset_as_h5(
         activation_maps_path, all_activation_maps, all_labels
@@ -114,3 +115,23 @@ class ActivationMapsDataset(Dataset):
 
     def __len__(self):
         return len(self.labels)
+
+
+if __name__ == "__main__":
+    import configue
+    from models import get_pretrained_model
+    from copy import deepcopy
+
+    config = configue.load("config.yaml")
+    model = get_pretrained_model(config)
+    device = torch.device("cpu")
+    dataset = None
+    image_dataset = get_dataset(config, allow_sample=False)
+    i = 1
+    while dataset is None:
+        print("Turn", i)
+        img_copy = deepcopy(image_dataset)
+        dataset = get_intermediate_dataset(
+            config, model, device, img_copy, save_freq=100
+        )
+        i += 1
