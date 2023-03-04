@@ -10,6 +10,9 @@ def get_pretrained_model(config):
         # weights with accuracy 80.858%
         pretrained_resnet = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
         return GalaxyResNet(config, pretrained_resnet)
+    if config["model"] == "resnet18":
+        pretrained_resnet = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=True)
+        return GalaxyResNet(config, pretrained_resnet)
 
 
 class GalaxyResNet(nn.Module):
@@ -25,6 +28,51 @@ class GalaxyResNet(nn.Module):
             pretrained_resnet.fc.in_features,
             config["model_architecture"]["nb_output_classes"],
         )
+        self.freeze_beginning()
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.intermediate_forward(x)
+        x = self.end_forward(x)
+        return x
+
+    def split_forward_in_two(self, config, pretrained_resnet):
+        frozen_half_list = []
+        unfrozen_half_list = []
+        freezing = True if config["last_frozen_layer"] != "" else False
+        # looping on layers except the last one (fully connected)
+        for layer_name in list(pretrained_resnet._modules.keys())[:-1]:
+            if freezing:
+                frozen_half_list.append(pretrained_resnet._modules[layer_name])
+            else:
+                unfrozen_half_list.append(pretrained_resnet._modules[layer_name])
+            if layer_name == config["last_frozen_layer"]:
+                freezing = False
+        self.frozen_layers = nn.Sequential(*frozen_half_list)
+        self.unfrozen_layers = nn.Sequential(*unfrozen_half_list)
+
+    def intermediate_forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.frozen_layers(x)
+        return x
+
+    def end_forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.unfrozen_layers(x)
+        x = torch.flatten(x, 1)
+        # we only replace resnet's fully connected with ours
+        x = self.fully_connected(x)
+        return x
+
+    def freeze_beginning(self):
+        self.frozen_layers.requires_grad_(False)
+
+    def unfreeze_beginning(self):
+        self.frozen_layers.requires_grad_(True)
+
+
+class CustomModel(nn.Module):
+    def __init__(self, config) -> None:
+        super().__init__()
+
+        self.conv1 = torch.nn
         self.freeze_beginning()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

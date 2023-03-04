@@ -4,13 +4,13 @@ seed: 42
 validation_dataset_proportion: 0.3
 test_dataset_proportion: 0.1
 dataset_percentage : 0.1
-intermediate_forward : true
-freeze_beginning : true # should be true if intermediate forward is true
-last_frozen_layer : "layer4"
+intermediate_forward : false
+freeze_beginning : false # should be true if intermediate forward is true
+last_frozen_layer : ""
 intermediate_activation_map_size : [2048, 7, 7] 
 
 # model parameters
-model: resnet50
+model: resnet18
 model_architecture : 
   fully_connected_hidden_layers : [2048, "relu", 1024, "relu", 512, "relu", 256, "relu", 128]
   nb_output_classes : 10
@@ -20,10 +20,10 @@ checkpoint_path : ""
 # training parameters
 batch_size: 50
 learning_rate : 
-    initial_value: 0.1
+    initial_value: 0.001
     decrease_on_plateau: true
     patience: 5
-weight_decay: 0.0005
+weight_decay: 0.00001
 nb_epochs : 50
 
 # useful paths and stuff
