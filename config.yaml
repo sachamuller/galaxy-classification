@@ -6,8 +6,8 @@ test_dataset_proportion: 0.1
 dataset_percentage : 0.1
 intermediate_forward : true
 freeze_beginning : true # should be true if intermediate forward is true
-last_frozen_layer : "layer3"
-intermediate_activation_map_size : [1024, 14, 14] # [2048, 7, 7] for layer4, [1024, 14, 14] for layer3
+last_frozen_layer : "layer2"
+intermediate_activation_map_size : [512, 28, 28] # [2048, 7, 7] for layer4, [1024, 14, 14] for layer3, [512, 28, 28] for layer2
 
 # model parameters
 model: resnet50

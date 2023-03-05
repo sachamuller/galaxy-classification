@@ -9,18 +9,22 @@ from torch.utils.data import DataLoader, Dataset
 
 from dataloaders import get_dataset
 
+from copy import deepcopy
+
 
 def get_intermediate_dataset(
     config: dict,
     model: nn.Module,
     device: torch.device,
     image_dataset,
-    save_freq: int = 300,
+    save_freq: int = 1000,
 ):
     activation_maps_path = os.path.join(
         config["paths"]["intermediate_dataset_folder"],
-        f'{config["paths"]["intermediate_dataset_name"]}_{config["last_frozen_layer"]}.h5',
+        f'{config["paths"]["intermediate_dataset_name"]}_{config["model"]}_{config["last_frozen_layer"]}.h5',
     )
+
+    all_labels = deepcopy(image_dataset.labels)
 
     if os.path.exists(activation_maps_path):
         F = h5py.File(activation_maps_path, "r")
@@ -37,14 +41,13 @@ def get_intermediate_dataset(
         # If we need to continue from the middle :
         # image_dataset = get_dataset(config, allow_sample=False)
         start_index = sum_by_activation_map.index(0.0)
-        all_labels = image_dataset.labels
+        
         image_dataset.truncate_beginning(start_index)
-
     else:
         # image_dataset = get_dataset(config, allow_sample=False)
         os.makedirs(config["paths"]["intermediate_dataset_folder"], exist_ok=True)
         all_activation_maps = torch.zeros(
-            len(image_dataset) // 4, *config["intermediate_activation_map_size"]
+            len(image_dataset), *config["intermediate_activation_map_size"]
         )
         start_index = 0
 
@@ -76,9 +79,9 @@ def get_intermediate_dataset(
 
         if (batch_idx + 1) % save_freq == 0:
             save_intermediate_dataset_as_h5(
-                activation_maps_path, all_activation_maps, image_dataset.labels
+                activation_maps_path, all_activation_maps, all_labels
             )
-            return None
+            # return None
 
     save_intermediate_dataset_as_h5(
         activation_maps_path, all_activation_maps, all_labels
@@ -132,6 +135,6 @@ if __name__ == "__main__":
         print("Turn", i)
         img_copy = deepcopy(image_dataset)
         dataset = get_intermediate_dataset(
-            config, model, device, img_copy, save_freq=100
+            config, model, device, img_copy, save_freq=500
         )
         i += 1
