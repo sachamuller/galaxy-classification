@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 import torch
 import torch.nn as nn
-from torchvision.models import ResNet50_Weights, resnet50
+from torchvision.models import ResNet50_Weights, resnet50, ResNet18_Weights, resnet18
 
 
 def get_pretrained_model(config):
@@ -11,7 +11,7 @@ def get_pretrained_model(config):
         pretrained_resnet = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
         return GalaxyResNet(config, pretrained_resnet)
     if config["model"] == "resnet18":
-        pretrained_resnet = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=True)
+        pretrained_resnet = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
         return GalaxyResNet(config, pretrained_resnet)
 
 
