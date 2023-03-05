@@ -101,4 +101,4 @@ def evaluate_only(model_path:str, which_dataset:str="validation", config:dict=No
 
 if __name__ == "__main__" : 
     # Fine tuning best model
-    evaluate_only("experiments/23-03-05_00:58:03/best_model.pth")
+    evaluate_only("experiments/23-03-04_12:59:53/best_model.pth")
