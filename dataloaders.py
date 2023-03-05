@@ -56,7 +56,7 @@ def get_dataset(config, allow_sample=True) -> ImageDataset:
 
 
 def get_dataloaders(
-    config, dataset, shuffle=True
+    config, dataset, shuffle=True, also_get_datasets=False
 ) -> Tuple[DataLoader, DataLoader, DataLoader]:
     val_prop = config["validation_dataset_proportion"]
     test_prop = config["test_dataset_proportion"]
@@ -92,6 +92,8 @@ def get_dataloaders(
         batch_size=batch_size,
         shuffle=shuffle,
     )
+    if also_get_datasets :
+        return train_dataset, validation_dataset, test_dataset, train_loader, validation_loader, test_loader
     return train_loader, validation_loader, test_loader
 
 
