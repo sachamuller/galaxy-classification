@@ -3,13 +3,13 @@ import h5py
 import numpy as np
 
 import torch
+import random
 import torch.nn as nn
-import torchvision.transforms as transforms
-import pandas as pd
 from tqdm import tqdm
 from torch.utils.data import DataLoader, Dataset
 
-from dataloaders import get_dataset, ImageDataset
+from dataloaders import get_dataset
+
 
 
 def get_intermediate_dataset(
@@ -33,7 +33,7 @@ def get_intermediate_dataset(
         sum_by_activation_map = list(all_activation_maps.sum(axis=(1, 2, 3)))
         if 0.0 not in sum_by_activation_map:
             # means the embeddings matrix is already completely computed
-            return ActivationMapsDataset(all_activation_maps, all_labels)
+            return get_dataset_sample(config, all_activation_maps, all_labels)
 
         # If we need to continue from the middle :
         image_dataset = get_dataset(config, allow_sample=False)
@@ -83,7 +83,18 @@ def get_intermediate_dataset(
         activation_maps_path, all_activation_maps, all_labels
     )
 
-    return ActivationMapsDataset(all_activation_maps, all_labels)
+    return get_dataset_sample(config, all_activation_maps, all_labels)
+
+def get_dataset_sample(config, activation_maps, labels, allow_sample=True):
+    if allow_sample and config["dataset_percentage"] < 1.0:
+        random.seed(config["seed"])
+        selected_index = random.sample(
+            [i for i in range(len(activation_maps))],
+            int(config["dataset_percentage"] * len(activation_maps)),
+        )
+        activation_maps = activation_maps[selected_index]
+        labels = labels[selected_index]
+    return ActivationMapsDataset(activation_maps, labels)
 
 
 def save_intermediate_dataset_as_h5(
