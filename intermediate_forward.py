@@ -16,6 +16,7 @@ def get_intermediate_dataset(
     config: dict,
     model: nn.Module,
     device: torch.device,
+    allow_sample=True,
     save_freq: int = 500,
 ):
     activation_maps_path = os.path.join(
@@ -33,7 +34,7 @@ def get_intermediate_dataset(
         sum_by_activation_map = list(all_activation_maps.sum(axis=(1, 2, 3)))
         if 0.0 not in sum_by_activation_map:
             # means the embeddings matrix is already completely computed
-            return get_dataset_sample(config, all_activation_maps, all_labels)
+            return get_dataset_sample(config, all_activation_maps, all_labels, allow_sample)
 
         # If we need to continue from the middle :
         image_dataset = get_dataset(config, allow_sample=False)
@@ -83,7 +84,7 @@ def get_intermediate_dataset(
         activation_maps_path, all_activation_maps, all_labels
     )
 
-    return get_dataset_sample(config, all_activation_maps, all_labels)
+    return get_dataset_sample(config, all_activation_maps, all_labels, allow_sample)
 
 def get_dataset_sample(config, activation_maps, labels, allow_sample=True):
     if allow_sample and config["dataset_percentage"] < 1.0:
