@@ -21,10 +21,10 @@ checkpoint_path : ""
 # training parameters
 batch_size: 50
 learning_rate : 
-    initial_value: 0.001
+    initial_value: 0.01
     decrease_on_plateau: true
-    patience: 5
-weight_decay: 0.00001
+    patience: 3
+weight_decay: 0.00005
 nb_epochs : 50
 
 # useful paths and stuff
