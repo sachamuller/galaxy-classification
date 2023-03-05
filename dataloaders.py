@@ -1,9 +1,9 @@
+import random
 from typing import Tuple
 
 import h5py
 import numpy as np
 import torch
-import random
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, Dataset, random_split
 
@@ -92,8 +92,15 @@ def get_dataloaders(
         batch_size=batch_size,
         shuffle=shuffle,
     )
-    if also_get_datasets :
-        return train_dataset, validation_dataset, test_dataset, train_loader, validation_loader, test_loader
+    if also_get_datasets:
+        return (
+            train_dataset,
+            validation_dataset,
+            test_dataset,
+            train_loader,
+            validation_loader,
+            test_loader,
+        )
     return train_loader, validation_loader, test_loader
 
 
