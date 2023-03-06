@@ -73,7 +73,7 @@ The other parameters of the config file are detailed below.
 ---
 ## :bar_chart: Results
 
-The results of the experiments analysed in the `experiment_analysis.ipynb` notebook can be found on [this drive]{https://drive.google.com/drive/folders/12Zh4lseEoRhBvv2djKmMrSihVnm_sgSm?usp=sharing}. For storage convenience, the trained model's weights are only available for the experiment which gave the best result, the other folders only contain the experimental conditions and the training charts.
+The results of the experiments analysed in the `experiment_analysis.ipynb` notebook can be found on [this drive](https://drive.google.com/drive/folders/12Zh4lseEoRhBvv2djKmMrSihVnm_sgSm?usp=sharing). For storage convenience, the trained model's weights are only available for the experiment which gave the best result, the other folders only contain the experimental conditions and the training charts.
 
 ---
 ## :rotating_light: Warning
